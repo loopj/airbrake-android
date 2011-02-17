@@ -40,8 +40,13 @@ import java.util.Random;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
+import android.text.TextUtils;
+import android.util.Log;
+
 
 public class HoptoadNotifier {
+    private static final String LOG_TAG = "HoptoadNotifier";
+
     // Basic settings
     private static final String HOPTOAD_ENDPOINT = "http://hoptoadapp.com/notifier_api/v2/notices";
     private static final String UNSENT_EXCEPTION_PATH = "/unsent_hoptoad_exceptions/";
@@ -103,7 +108,9 @@ public class HoptoadNotifier {
         try {
             packageName = context.getPackageName();
             PackageInfo pi = context.getPackageManager().getPackageInfo(packageName, 0);
-            versionName = pi.versionName;
+            if(pi.versionName != null) {
+                versionName = pi.versionName;
+            }
         } catch (PackageManager.NameNotFoundException e) {}
 
         // Prepare the file storage location
@@ -111,6 +118,8 @@ public class HoptoadNotifier {
         File outFile = new File(filePath);
         outFile.mkdirs();
         diskStorageEnabled = outFile.exists();
+
+        Log.d(LOG_TAG, "Registered and ready to handle exceptions.");
 
         // Flush any existing exception info
         flushExceptions();
@@ -134,27 +143,33 @@ public class HoptoadNotifier {
             // Build and write xml to output stream
             out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             out.write("<notice version=\"2.0\">");
-            out.write("  <api-key>" + apiKey + "</api-key>");
+            out.write("  <api-key>" + TextUtils.htmlEncode(apiKey) + "</api-key>");
             out.write("  <notifier>");
             out.write("    <name>Android Hoptoad Notifier</name>");
             out.write("    <version>1.0.0</version>");
             out.write("    <url>http://loopj.com</url>");
             out.write("  </notifier>");
             out.write("  <error>");
-            out.write("    <class>" + e.getClass().getName() + "</class>");
-            out.write("    <message>[" + versionName + "] " + e.getLocalizedMessage() + "</message>");
+            out.write("    <class>" + TextUtils.htmlEncode(e.getClass().getName()) + "</class>");
+
+            if(e.getLocalizedMessage() != null) {
+                out.write("    <message>[" + TextUtils.htmlEncode(versionName) + "] " + TextUtils.htmlEncode(e.getLocalizedMessage()) + "</message>");
+            } else {
+                out.write("    <message>[" + TextUtils.htmlEncode(versionName) + "] " + TextUtils.htmlEncode(e.getClass().getName()) + "</message>");
+            }
+
             out.write("    <backtrace>");
 
             // Extract the stack traces
             Throwable currentEx = e;
-            while(e != null) {
-                StackTraceElement[] stackTrace = e.getStackTrace();
+            while(currentEx != null) {
+                StackTraceElement[] stackTrace = currentEx.getStackTrace();
                 for(StackTraceElement el : stackTrace) {
-                    out.write("      <line method=\"" + el.getClassName() + "." + el.getMethodName() + "\" file=\"" + el.getFileName() + "\" number=\"" + String.valueOf(el.getLineNumber()) + "\" />");
+                    out.write("      <line method=\"" + TextUtils.htmlEncode(el.getClassName() + "." + el.getMethodName()) + "\" file=\"" + TextUtils.htmlEncode(el.getFileName()) + "\" number=\"" + String.valueOf(el.getLineNumber()) + "\" />");
                 }
 
-                e = e.getCause();
-                if(e != null) {
+                currentEx = currentEx.getCause();
+                if(currentEx != null) {
                     out.write("      <line file=\"CAUSED BY\" number=\"\" />");
                 }
             }
@@ -166,18 +181,20 @@ public class HoptoadNotifier {
             out.write("     <component/>");
             out.write("     <action/>");
             out.write("     <cgi-data>");
-            out.write("         <var key=\"Device\">" + phoneModel + "</var>");
-            out.write("         <var key=\"Android Version\">" + androidVersion + "</var>");
-            out.write("         <var key=\"App Version\">" + versionName + "</var>");
+            out.write("         <var key=\"Device\">" + TextUtils.htmlEncode(phoneModel) + "</var>");
+            out.write("         <var key=\"Android Version\">" + TextUtils.htmlEncode(androidVersion) + "</var>");
+            out.write("         <var key=\"App Version\">" + TextUtils.htmlEncode(versionName) + "</var>");
             out.write("     </cgi-data>");
             out.write("  </request>");
             out.write("  <server-environment>");
-            out.write("    <environment-name>" + environmentName + "</environment-name>");
+            out.write("    <environment-name>" + TextUtils.htmlEncode(environmentName) + "</environment-name>");
             out.write("  </server-environment>");
             out.write("</notice>");
 
             out.flush();
             out.close();
+
+            Log.d(LOG_TAG, "Writing new " + e.getClass().getName() + " exception to disk.");
         } catch (Exception bade) {
             bade.printStackTrace();
         }
@@ -205,7 +222,8 @@ public class HoptoadNotifier {
                 is.close();
 
                 // Flush the request through
-                conn.getResponseCode();
+                int response = conn.getResponseCode();
+                Log.d(LOG_TAG, "Sent exception file " + file.getName() + " to hoptoad. Got response code " + String.valueOf(response));
 
                 // Delete file now we've sent the exceptions
                 file.delete();
