@@ -118,7 +118,7 @@ public class HoptoadNotifier {
             if(pi.versionName != null) {
                 versionName = pi.versionName;
             }
-        } catch (PackageManager.NameNotFoundException e) {}
+        } catch (Exception e) {}
 
         // Prepare the file storage location
         filePath = context.getFilesDir().getAbsolutePath() + UNSENT_EXCEPTION_PATH;
