@@ -37,11 +37,14 @@ import java.io.OutputStreamWriter;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Random;
 
+import org.xmlpull.v1.XmlSerializer;
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Xml;
 
 
 public class HoptoadNotifier {
@@ -49,6 +52,10 @@ public class HoptoadNotifier {
 
     // Basic settings
     private static final String HOPTOAD_ENDPOINT = "http://hoptoadapp.com/notifier_api/v2/notices";
+    private static final String HOPTOAD_API_VERSION = "2.0";
+    private static final String NOTIFIER_NAME = "Android Hoptoad Notifier";
+    private static final String NOTIFIER_VERSION = "1.0.0";
+    private static final String NOTIFIER_URL = "http://loopj.com";
     private static final String UNSENT_EXCEPTION_PATH = "/unsent_hoptoad_exceptions/";
 
     // Exception meta-data
@@ -138,65 +145,110 @@ public class HoptoadNotifier {
             // Set up the output stream
             int random = new Random().nextInt(99999);
             String filename = filePath + versionName + "-" + String.valueOf(random) + ".xml";
-            BufferedWriter out = new BufferedWriter(new FileWriter(filename));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+            XmlSerializer s = Xml.newSerializer();
+            s.setOutput(writer);
 
-            // Build and write xml to output stream
-            out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            out.write("<notice version=\"2.0\">");
-            out.write("  <api-key>" + TextUtils.htmlEncode(apiKey) + "</api-key>");
-            out.write("  <notifier>");
-            out.write("    <name>Android Hoptoad Notifier</name>");
-            out.write("    <version>1.0.0</version>");
-            out.write("    <url>http://loopj.com</url>");
-            out.write("  </notifier>");
-            out.write("  <error>");
-            out.write("    <class>" + TextUtils.htmlEncode(e.getClass().getName()) + "</class>");
+            // Start ridiculous xml building
+            s.startDocument("UTF-8", true);
 
-            if(e.getLocalizedMessage() != null) {
-                out.write("    <message>[" + TextUtils.htmlEncode(versionName) + "] " + TextUtils.htmlEncode(e.getLocalizedMessage()) + "</message>");
-            } else {
-                out.write("    <message>[" + TextUtils.htmlEncode(versionName) + "] " + TextUtils.htmlEncode(e.getClass().getName()) + "</message>");
-            }
+            // Top level tag
+            s.startTag("", "notice");
+            s.attribute("", "version", HOPTOAD_API_VERSION);
 
-            out.write("    <backtrace>");
+            // Fill in the api key
+            s.startTag("", "api-key");
+            s.text(apiKey);
+            s.endTag("", "api-key");
+
+            // Fill in the notifier data
+            s.startTag("", "notifier");
+            s.startTag("", "name");
+            s.text(NOTIFIER_NAME);
+            s.endTag("", "name");
+            s.startTag("", "version");
+            s.text(NOTIFIER_VERSION);
+            s.endTag("", "version");
+            s.startTag("", "url");
+            s.text(NOTIFIER_URL);
+            s.endTag("", "url");
+            s.endTag("", "notifier");
+
+            // Fill in the error info
+            s.startTag("", "error");
+            s.startTag("", "class");
+            s.text(e.getClass().getName());
+            s.endTag("", "class");
+            s.startTag("", "message");
+            s.text("[" + versionName + "] " + e.toString());
+            s.endTag("", "message");
 
             // Extract the stack traces
+            s.startTag("", "backtrace");
             Throwable currentEx = e;
             while(currentEx != null) {
                 StackTraceElement[] stackTrace = currentEx.getStackTrace();
                 for(StackTraceElement el : stackTrace) {
-                    out.write("      <line method=\"" + TextUtils.htmlEncode(el.getClassName() + "." + el.getMethodName()) + "\" file=\"" + TextUtils.htmlEncode(el.getFileName()) + "\" number=\"" + String.valueOf(el.getLineNumber()) + "\" />");
+                    s.startTag("", "line");
+                    s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
+                    s.attribute("", "file", el.getFileName());
+                    s.attribute("", "number", String.valueOf(el.getLineNumber()));
+                    s.endTag("", "line");
                 }
 
                 currentEx = currentEx.getCause();
                 if(currentEx != null) {
-                    out.write("      <line file=\"CAUSED BY\" number=\"\" />");
+                    s.startTag("", "line");
+                    s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
+                    s.attribute("", "number", "");
+                    s.endTag("", "line");
                 }
             }
+            s.endTag("", "backtrace");
+            s.endTag("", "error");
 
-            out.write("    </backtrace>");
-            out.write("  </error>");
-            out.write("  <request>");
-            out.write("     <url/>");
-            out.write("     <component/>");
-            out.write("     <action/>");
-            out.write("     <cgi-data>");
-            out.write("         <var key=\"Device\">" + TextUtils.htmlEncode(phoneModel) + "</var>");
-            out.write("         <var key=\"Android Version\">" + TextUtils.htmlEncode(androidVersion) + "</var>");
-            out.write("         <var key=\"App Version\">" + TextUtils.htmlEncode(versionName) + "</var>");
-            out.write("     </cgi-data>");
-            out.write("  </request>");
-            out.write("  <server-environment>");
-            out.write("    <environment-name>" + TextUtils.htmlEncode(environmentName) + "</environment-name>");
-            out.write("  </server-environment>");
-            out.write("</notice>");
+            // Additional request info
+            s.startTag("", "request");
+            s.startTag("", "url");
+            s.endTag("", "url");
+            s.startTag("", "component");
+            s.endTag("", "component");
+            s.startTag("", "action");
+            s.endTag("", "action");
+            s.startTag("", "cgi-data");
+            s.startTag("", "var");
+            s.attribute("", "key", "Device");
+            s.text(phoneModel);
+            s.endTag("", "var");
+            s.startTag("", "var");
+            s.attribute("", "key", "Android Version");
+            s.text(androidVersion);
+            s.endTag("", "var");
+            s.startTag("", "var");
+            s.attribute("", "key", "App Version");
+            s.text(versionName);
+            s.endTag("", "var");
+            s.endTag("", "cgi-data");
+            s.endTag("", "request");
 
-            out.flush();
-            out.close();
+            // Production/development mode flag
+            s.startTag("", "server-environment");
+            s.startTag("", "environment-name");
+            s.text(environmentName);
+            s.endTag("", "environment-name");
+            s.endTag("", "server-environment");
+
+            // Close document
+            s.endTag("", "notice");
+            s.endDocument();
+
+            // Flush to disk
+            writer.flush();
+            writer.close();
 
             Log.d(LOG_TAG, "Writing new " + e.getClass().getName() + " exception to disk.");
-        } catch (Exception bade) {
-            bade.printStackTrace();
+        } catch (Exception newException) {
+            newException.printStackTrace();
         }
     }
 
