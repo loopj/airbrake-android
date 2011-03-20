@@ -4,7 +4,7 @@ title: Hoptoad Notifer for Android
 tagline: Automatically Notify Hoptoad of Exceptions in your Android App
 version: 1.0
 github_url: https://github.com/loopj/hoptoad-android
-download_url: https://github.com/loopj/hoptoad-android/zipball/hoptoad-android-1.0
+download_url: https://github.com/downloads/loopj/hoptoad-android/hoptoad-android.jar
 ---
 
 
