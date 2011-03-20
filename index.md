@@ -64,6 +64,18 @@ try {
 {% endhighlight %}
 
 
+Building from Source
+--------------------
+To build a `.jar` file from source, make a clone of the hoptoad-android
+github repository and run:
+
+{% highlight bash %}
+ant package
+{% endhighlight %}
+
+This will generate a file named `hoptoad-android.jar`.
+
+
 Reporting Bugs or Feature Requests
 ----------------------------------
 Please report any bugs or feature requests on the github issues page for this
