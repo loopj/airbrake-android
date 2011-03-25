@@ -1,6 +1,9 @@
 <project default="package">
+    <property name="project-name" value="hoptoad-android" />
     <property name="version.num" value="1.0.0" />
     <buildnumber file="build.num" />
+
+    <property name="jarfile" value="${project-name}-${version.num}.jar" />
     <property name="lib.dir" value="/usr/local/android_sdk/platforms/android-7/" />
     <property name="build.dir" value="./build"/>
     <property name="classes.dir"  value="${build.dir}/classes"/>
@@ -16,22 +19,22 @@
     </target>
 
     <target name="jar" depends="compile">
-        <delete file="hoptoad-android.jar" />
+        <delete file="${jarfile}" />
         <delete file="MANIFEST.MF" />
         <manifest file="MANIFEST.MF">
             <attribute name="Built-By" value="${user.name}" />
             <attribute name="Implementation-Version" value="${version.num}-b${build.number}"/> 
         </manifest>
 
-        <jar destfile="hoptoad-android.jar" basedir="build/classes" includes="**/*.class" manifest="MANIFEST.MF" />
+        <jar destfile="${jarfile}" basedir="build/classes" includes="**/*.class" manifest="MANIFEST.MF" />
     </target>
 
     <target name="clean">
         <delete dir="build" />
         <delete>
-            <fileset dir="." includes="hoptoad-android.jar*"/>
+            <fileset dir="." includes="${jarfile}"/>
             <fileset file="MANIFEST.MF"/>
-        </delete>  
+        </delete>
     </target>
 
     <target name="package" depends="compile,jar" />
