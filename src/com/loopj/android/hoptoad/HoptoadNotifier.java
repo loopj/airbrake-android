@@ -53,7 +53,7 @@ public class HoptoadNotifier {
     private static final String UNSENT_EXCEPTION_PATH = "/unsent_hoptoad_exceptions/";
 
     // Exception meta-data
-    private static String environmentName = "default";
+    private static String environmentName = "production";
     private static String packageName = "unknown";
     private static String versionName = "unknown";
     private static String phoneModel = android.os.Build.MODEL;
@@ -63,6 +63,7 @@ public class HoptoadNotifier {
     private static String apiKey;
 
     // Exception storage info
+    private static boolean notifyOnlyProduction = false;
     private static String filePath;
     private static boolean diskStorageEnabled = false;
 
@@ -82,11 +83,14 @@ public class HoptoadNotifier {
 
     // Register to send exceptions to hoptoad
     public static void register(Context context, String apiKey) {
-        register(context, apiKey, null);
+        register(context, apiKey, "production", true);
     }
 
-    // Register to send exceptions to hoptoad (with an environment name)
     public static void register(Context context, String apiKey, String environmentName) {
+        register(context, apiKey, environmentName, true);
+    }
+
+    public static void register(Context context, String apiKey, String environmentName, boolean notifyOnlyProduction) {
         // Require a hoptoad api key
         if(apiKey != null) {
             HoptoadNotifier.apiKey = apiKey;
@@ -99,9 +103,12 @@ public class HoptoadNotifier {
             HoptoadNotifier.environmentName = environmentName;
         }
 
+        // Check which exception types to notify
+        HoptoadNotifier.notifyOnlyProduction = notifyOnlyProduction;
+
         // Connect our default exception handler
         UncaughtExceptionHandler currentHandler = Thread.getDefaultUncaughtExceptionHandler();
-        if(!(currentHandler instanceof HoptoadExceptionHandler)) {
+        if(!(currentHandler instanceof HoptoadExceptionHandler) && (environmentName.equals("production") || !notifyOnlyProduction)) {
             Thread.setDefaultUncaughtExceptionHandler(new HoptoadExceptionHandler(currentHandler));
         }
 
