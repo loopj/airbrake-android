@@ -232,11 +232,14 @@ public class HoptoadNotifier {
             s.endTag("", "cgi-data");
             s.endTag("", "request");
 
-            // Production/development mode flag
+            // Production/development mode flag and app version
             s.startTag("", "server-environment");
             s.startTag("", "environment-name");
             s.text(environmentName);
             s.endTag("", "environment-name");
+            s.startTag("", "app-version");
+            s.text(versionName);
+            s.endTag("", "app-version");
             s.endTag("", "server-environment");
 
             // Close document
