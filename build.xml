@@ -2,7 +2,7 @@
     <property environment="env"/>
     
     <!-- Project properties -->
-    <property name="version.num" value="1.1.0" />
+    <property name="version.num" value="1.2.0" />
     <property name="project" value="hoptoad-android" />
 
     <!-- Standard jar stuff -->
