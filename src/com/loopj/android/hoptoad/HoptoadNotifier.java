@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.Map;
 import java.util.Random;
 
 import org.xmlpull.v1.XmlSerializer;
@@ -58,6 +59,9 @@ public class HoptoadNotifier {
     private static String versionName = "unknown";
     private static String phoneModel = android.os.Build.MODEL;
     private static String androidVersion = android.os.Build.VERSION.RELEASE;
+
+    // Anything extra the app wants to add
+    private static Map<String, String> extraData;
 
     // Hoptoad api key
     private static String apiKey;
@@ -131,6 +135,14 @@ public class HoptoadNotifier {
 
         // Flush any existing exception info
         flushExceptions();
+    }
+
+    /**
+     * Add a custom set of key/value data that will be sent as session data with each notification
+     * @param extraData a Map of String -> String
+     */
+    public static void setExtraData(Map<String,String> extraData) {
+        HoptoadNotifier.extraData = extraData;
     }
 
     // Fire an exception to hoptoad manually
@@ -210,6 +222,7 @@ public class HoptoadNotifier {
 
             // Additional request info
             s.startTag("", "request");
+
             s.startTag("", "url");
             s.endTag("", "url");
             s.startTag("", "component");
@@ -229,6 +242,17 @@ public class HoptoadNotifier {
             s.attribute("", "key", "App Version");
             s.text(versionName);
             s.endTag("", "var");
+
+            // Extra info, if present
+            if (extraData != null && !extraData.isEmpty()) {
+                for (Map.Entry<String,String> extra : extraData.entrySet()) {
+                    s.startTag("", "var");
+                    s.attribute("", "key", extra.getKey());
+                    s.text(extra.getValue());
+                    s.endTag("", "var");
+                }
+            }
+
             s.endTag("", "cgi-data");
             s.endTag("", "request");
 

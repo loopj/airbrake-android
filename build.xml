@@ -1,11 +1,14 @@
 <project default="package">
+    <property environment="env"/>
+    
     <!-- Project properties -->
     <property name="version.num" value="1.1.0" />
     <property name="project" value="hoptoad-android" />
 
     <!-- Standard jar stuff -->
     <property name="jarfile" value="${project}-${version.num}.jar" />
-    <property name="lib.dir" value="/usr/local/android_sdk/platforms/android-7/" />
+    <property name="env.ANDROID_HOME" value="/usr/local/android_sdk"/>
+    <property name="lib.dir" value="${env.ANDROID_HOME}/platforms/android-7/" />
     <property name="build.dir" value="./build"/>
     <property name="classes.dir"  value="${build.dir}/classes"/>
     <buildnumber file="build.num" />
