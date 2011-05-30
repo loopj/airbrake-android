@@ -37,6 +37,7 @@ import org.xmlpull.v1.XmlSerializer;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
+import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
@@ -126,6 +127,7 @@ public class HoptoadNotifier {
         } catch (Exception e) {}
 
         // Prepare the file storage location
+        // TODO: Does this need to be done in a background thread?
         filePath = context.getFilesDir().getAbsolutePath() + UNSENT_EXCEPTION_PATH;
         File outFile = new File(filePath);
         outFile.mkdirs();
@@ -134,7 +136,12 @@ public class HoptoadNotifier {
         Log.d(LOG_TAG, "Registered and ready to handle exceptions.");
 
         // Flush any existing exception info
-        flushExceptions();
+        new AsyncTask <Void, Void, Void>() {
+            protected Void doInBackground(Void... voi) {
+                flushExceptions();
+                return null;
+            }
+        }.execute();
     }
 
     /**
@@ -146,10 +153,15 @@ public class HoptoadNotifier {
     }
 
     // Fire an exception to hoptoad manually
-    public static void notify(Throwable e) {
+    public static void notify(final Throwable e) {
         if(e != null && diskStorageEnabled) {
-            writeExceptionToDisk(e);
-            flushExceptions();
+            new AsyncTask <Void, Void, Void>() {
+                 protected Void doInBackground(Void... voi) {
+                     writeExceptionToDisk(e);
+                     flushExceptions();
+                     return null;
+                 }
+            }.execute();
         }
     }
 
