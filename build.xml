@@ -22,7 +22,12 @@
     <target name="compile">
         <mkdir dir="${build.dir}" />
         <mkdir dir="${classes.dir}" />
-        <javac srcdir="." destdir="${classes.dir}" classpathref="classpath" />
+        <javac
+            srcdir="."
+            destdir="${classes.dir}"
+            classpathref="classpath"
+            debug="true"
+            debuglevel="lines,source" />
     </target>
 
     <!-- Package a jar from compiled class files -->
