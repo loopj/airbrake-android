@@ -212,22 +212,25 @@ public class HoptoadNotifier {
             s.startTag("", "backtrace");
             Throwable currentEx = e;
             while(currentEx != null) {
-                StackTraceElement[] stackTrace = currentEx.getStackTrace();
-                for(StackTraceElement el : stackTrace) {
-                    s.startTag("", "line");
-                    s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
-                    s.attribute("", "file", el.getFileName());
-                    s.attribute("", "number", String.valueOf(el.getLineNumber()));
-                    s.endTag("", "line");
-                }
+                // Catch some inner exceptions without discarding the entire report
+                try {
+                    StackTraceElement[] stackTrace = currentEx.getStackTrace();
+                    for(StackTraceElement el : stackTrace) {
+                        s.startTag("", "line");
+                        s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
+                        s.attribute("", "file", el.getFileName());
+                        s.attribute("", "number", String.valueOf(el.getLineNumber()));
+                        s.endTag("", "line");
+                    }
 
-                currentEx = currentEx.getCause();
-                if(currentEx != null) {
-                    s.startTag("", "line");
-                    s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
-                    s.attribute("", "number", "");
-                    s.endTag("", "line");
-                }
+                    currentEx = currentEx.getCause();
+                    if(currentEx != null) {
+                        s.startTag("", "line");
+                        s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
+                        s.attribute("", "number", "");
+                        s.endTag("", "line");
+                    }
+                } catch(Throwable innerException) {}
             }
             s.endTag("", "backtrace");
             s.endTag("", "error");
