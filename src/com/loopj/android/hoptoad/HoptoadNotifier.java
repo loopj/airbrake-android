@@ -217,20 +217,31 @@ public class HoptoadNotifier {
                     StackTraceElement[] stackTrace = currentEx.getStackTrace();
                     for(StackTraceElement el : stackTrace) {
                         s.startTag("", "line");
-                        s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
-                        s.attribute("", "file", el.getFileName());
-                        s.attribute("", "number", String.valueOf(el.getLineNumber()));
-                        s.endTag("", "line");
+                        try{
+                          s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
+                          s.attribute("", "file", el.getFileName());
+                          s.attribute("", "number", String.valueOf(el.getLineNumber()));
+                        }catch(Throwable ei){
+                        }finally{
+                          s.endTag("", "line");
+                        }
                     }
 
                     currentEx = currentEx.getCause();
                     if(currentEx != null) {
                         s.startTag("", "line");
-                        s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
-                        s.attribute("", "number", "");
-                        s.endTag("", "line");
+                        try{
+                          s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
+                          s.attribute("", "number", "");
+                          s.endTag("", "line");
+                        }catch(Throwable ei){
+                        }finally{
+                          s.endTag("", "line");
+                        }
                     }
-                } catch(Throwable innerException) {}
+                } catch(Throwable innerException) {
+                  break;
+                }
             }
             s.endTag("", "backtrace");
             s.endTag("", "error");
@@ -321,10 +332,10 @@ public class HoptoadNotifier {
                 Log.d(LOG_TAG, "Sent exception file " + file.getName() + " to hoptoad. Got response code " + String.valueOf(response));
 
                 // Delete file now we've sent the exceptions
-                file.delete();
-            } catch(IOException e) {
+            } catch(Throwable ei) {
                 // Ignore any file stream issues
             } finally {
+                file.delete();
                 conn.disconnect();
             }
         } catch(IOException e) {
