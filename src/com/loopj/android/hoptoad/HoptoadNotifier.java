@@ -219,12 +219,12 @@ public class HoptoadNotifier {
                         s.startTag("", "line");
                         try{
                           s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
-                          s.attribute("", "file", el.getFileName());
+                          s.attribute("", "file", el.getFileName() == null ? "Unknown" : el.getFileName());
                           s.attribute("", "number", String.valueOf(el.getLineNumber()));
                         }catch(Throwable ei){
-                        }finally{
-                          s.endTag("", "line");
+                            ei.printStackTrace();
                         }
+                        s.endTag("", "line");
                     }
 
                     currentEx = currentEx.getCause();
@@ -233,13 +233,13 @@ public class HoptoadNotifier {
                         try{
                           s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
                           s.attribute("", "number", "");
-                          s.endTag("", "line");
                         }catch(Throwable ei){
-                        }finally{
-                          s.endTag("", "line");
+                            ei.printStackTrace();
                         }
+                        s.endTag("", "line");
                     }
                 } catch(Throwable innerException) {
+                    innerException.printStackTrace();
                   break;
                 }
             }
