@@ -221,20 +221,31 @@ public class AirbrakeNotifier {
                     StackTraceElement[] stackTrace = currentEx.getStackTrace();
                     for(StackTraceElement el : stackTrace) {
                         s.startTag("", "line");
-                        s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
-                        s.attribute("", "file", el.getFileName());
-                        s.attribute("", "number", String.valueOf(el.getLineNumber()));
+                        try{
+                          s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
+                          s.attribute("", "file", el.getFileName() == null ? "Unknown" : el.getFileName());
+                          s.attribute("", "number", String.valueOf(el.getLineNumber()));
+                        }catch(Throwable ei){
+                            ei.printStackTrace();
+                        }
                         s.endTag("", "line");
                     }
 
                     currentEx = currentEx.getCause();
                     if(currentEx != null) {
                         s.startTag("", "line");
-                        s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
-                        s.attribute("", "number", "");
+                        try{
+                          s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
+                          s.attribute("", "number", "");
+                        }catch(Throwable ei){
+                            ei.printStackTrace();
+                        }
                         s.endTag("", "line");
                     }
-                } catch(Throwable innerException) {}
+                } catch(Throwable innerException) {
+                    innerException.printStackTrace();
+                  break;
+                }
             }
             s.endTag("", "backtrace");
             s.endTag("", "error");
@@ -335,10 +346,10 @@ public class AirbrakeNotifier {
                 Log.d(LOG_TAG, "Sent exception file " + file.getName() + " to airbrake. Got response code " + String.valueOf(response));
 
                 // Delete file now we've sent the exceptions
-                file.delete();
-            } catch(IOException e) {
+            } catch(Throwable ei) {
                 // Ignore any file stream issues
             } finally {
+                file.delete();
                 conn.disconnect();
             }
         } catch(IOException e) {
