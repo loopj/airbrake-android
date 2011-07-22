@@ -2,7 +2,7 @@
     <property environment="env"/>
     
     <!-- Project properties -->
-    <property name="version.num" value="1.2.1" />
+    <property name="version.num" value="1.3.0" />
     <property name="project" value="airbrake-android" />
 
     <!-- Standard jar stuff -->
