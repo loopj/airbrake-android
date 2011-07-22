@@ -1,5 +1,5 @@
 /*
-    Hoptoad Notifier for Android
+    Airbrake Notifier for Android
     Copyright (c) 2011 James Smith <james@loopj.com>
     http://loopj.com
 
@@ -16,7 +16,7 @@
     limitations under the License.
 */
 
-package com.loopj.android.hoptoad;
+package com.loopj.android.airbrake;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -43,16 +43,16 @@ import android.util.Log;
 import android.util.Xml;
 
 
-public class HoptoadNotifier {
-    private static final String LOG_TAG = "HoptoadNotifier";
+public class AirbrakeNotifier {
+    private static final String LOG_TAG = "AirbrakeNotifier";
 
     // Basic settings
-    private static final String HOPTOAD_ENDPOINT = "http://hoptoadapp.com/notifier_api/v2/notices";
-    private static final String HOPTOAD_API_VERSION = "2.0";
-    private static final String NOTIFIER_NAME = "Android Hoptoad Notifier";
+    private static final String AIRBRAKE_ENDPOINT = "http://airbrakeapp.com/notifier_api/v2/notices";
+    private static final String AIRBRAKE_API_VERSION = "2.0";
+    private static final String NOTIFIER_NAME = "Android Airbrake Notifier";
     private static final String NOTIFIER_VERSION = "1.0.0";
     private static final String NOTIFIER_URL = "http://loopj.com";
-    private static final String UNSENT_EXCEPTION_PATH = "/unsent_hoptoad_exceptions/";
+    private static final String UNSENT_EXCEPTION_PATH = "/unsent_airbrake_exceptions/";
 
     // Exception meta-data
     private static String environmentName = "production";
@@ -64,7 +64,7 @@ public class HoptoadNotifier {
     // Anything extra the app wants to add
     private static Map<String, String> extraData;
 
-    // Hoptoad api key
+    // Airbrake api key
     private static String apiKey;
 
     // Exception storage info
@@ -72,21 +72,21 @@ public class HoptoadNotifier {
     private static String filePath;
     private static boolean diskStorageEnabled = false;
 
-    // Wrapper class to send uncaught exceptions to hoptoad
-    private static class HoptoadExceptionHandler implements UncaughtExceptionHandler {
+    // Wrapper class to send uncaught exceptions to airbrake
+    private static class AirbrakeExceptionHandler implements UncaughtExceptionHandler {
         private UncaughtExceptionHandler defaultExceptionHandler;
 
-        public HoptoadExceptionHandler(UncaughtExceptionHandler defaultExceptionHandlerIn) {
+        public AirbrakeExceptionHandler(UncaughtExceptionHandler defaultExceptionHandlerIn) {
             defaultExceptionHandler = defaultExceptionHandlerIn;
         }
 
         public void uncaughtException(Thread t, Throwable e) {
-            HoptoadNotifier.notify(e);
+            AirbrakeNotifier.notify(e);
             defaultExceptionHandler.uncaughtException(t, e);
         }
     }
 
-    // Register to send exceptions to hoptoad
+    // Register to send exceptions to airbrake
     public static void register(Context context, String apiKey) {
         register(context, apiKey, "production", true);
     }
@@ -96,25 +96,25 @@ public class HoptoadNotifier {
     }
 
     public static void register(Context context, String apiKey, String environmentName, boolean notifyOnlyProduction) {
-        // Require a hoptoad api key
+        // Require a airbrake api key
         if(apiKey != null) {
-            HoptoadNotifier.apiKey = apiKey;
+            AirbrakeNotifier.apiKey = apiKey;
         } else {
-            throw new RuntimeException("HoptoadNotifier requires a Hoptoad API key.");
+            throw new RuntimeException("AirbrakeNotifier requires a Airbrake API key.");
         }
 
         // Fill in environment name if passed
         if(environmentName != null) {
-            HoptoadNotifier.environmentName = environmentName;
+            AirbrakeNotifier.environmentName = environmentName;
         }
 
         // Check which exception types to notify
-        HoptoadNotifier.notifyOnlyProduction = notifyOnlyProduction;
+        AirbrakeNotifier.notifyOnlyProduction = notifyOnlyProduction;
 
         // Connect our default exception handler
         UncaughtExceptionHandler currentHandler = Thread.getDefaultUncaughtExceptionHandler();
-        if(!(currentHandler instanceof HoptoadExceptionHandler) && (environmentName.equals("production") || !notifyOnlyProduction)) {
-            Thread.setDefaultUncaughtExceptionHandler(new HoptoadExceptionHandler(currentHandler));
+        if(!(currentHandler instanceof AirbrakeExceptionHandler) && (environmentName.equals("production") || !notifyOnlyProduction)) {
+            Thread.setDefaultUncaughtExceptionHandler(new AirbrakeExceptionHandler(currentHandler));
         }
 
         // Load up current package name and version
@@ -149,15 +149,19 @@ public class HoptoadNotifier {
      * @param extraData a Map of String -> String
      */
     public static void setExtraData(Map<String,String> extraData) {
-        HoptoadNotifier.extraData = extraData;
+        AirbrakeNotifier.extraData = extraData;
     }
 
-    // Fire an exception to hoptoad manually
+    // Fire an exception to airbrake manually
     public static void notify(final Throwable e) {
+        notify(e, null);
+    }
+
+    public static void notify(final Throwable e, final Map<String,String> metaData) {
         if(e != null && diskStorageEnabled) {
             new AsyncTask <Void, Void, Void>() {
                  protected Void doInBackground(Void... voi) {
-                     writeExceptionToDisk(e);
+                     writeExceptionToDisk(e, metaData);
                      flushExceptions();
                      return null;
                  }
@@ -165,7 +169,7 @@ public class HoptoadNotifier {
         }
     }
 
-    private static void writeExceptionToDisk(Throwable e) {
+    private static void writeExceptionToDisk(Throwable e, final Map<String,String> metaData) {
         try {
             // Set up the output stream
             int random = new Random().nextInt(99999);
@@ -179,7 +183,7 @@ public class HoptoadNotifier {
 
             // Top level tag
             s.startTag("", "notice");
-            s.attribute("", "version", HOPTOAD_API_VERSION);
+            s.attribute("", "version", AIRBRAKE_API_VERSION);
 
             // Fill in the api key
             s.startTag("", "api-key");
@@ -268,6 +272,16 @@ public class HoptoadNotifier {
                 }
             }
 
+            // Metadata, if present
+            if (metaData != null && !metaData.isEmpty()) {
+                for (Map.Entry<String,String> extra : metaData.entrySet()) {
+                    s.startTag("", "var");
+                    s.attribute("", "key", extra.getKey());
+                    s.text(extra.getValue());
+                    s.endTag("", "var");
+                }
+            }
+
             s.endTag("", "cgi-data");
             s.endTag("", "request");
 
@@ -297,7 +311,7 @@ public class HoptoadNotifier {
 
     private static void sendExceptionData(File file) {
         try {
-            URL url = new URL(HOPTOAD_ENDPOINT);
+            URL url = new URL(AIRBRAKE_ENDPOINT);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             try {
                 // Set up the connection
@@ -318,7 +332,7 @@ public class HoptoadNotifier {
 
                 // Flush the request through
                 int response = conn.getResponseCode();
-                Log.d(LOG_TAG, "Sent exception file " + file.getName() + " to hoptoad. Got response code " + String.valueOf(response));
+                Log.d(LOG_TAG, "Sent exception file " + file.getName() + " to airbrake. Got response code " + String.valueOf(response));
 
                 // Delete file now we've sent the exceptions
                 file.delete();
