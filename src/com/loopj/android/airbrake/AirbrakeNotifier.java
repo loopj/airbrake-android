@@ -64,7 +64,7 @@ public class AirbrakeNotifier {
     private static final String ENVIRONMENT_DEFAULT = ENVIRONMENT_PRODUCTION;
 
     // Exception meta-data
-    private static String environmentName = DEFAULT_ENVIRONMENT_NAME;
+    private static String environmentName = ENVIRONMENT_DEFAULT;
     private static String packageName = "unknown";
     private static String versionName = "unknown";
     private static String phoneModel = android.os.Build.MODEL;
@@ -97,7 +97,7 @@ public class AirbrakeNotifier {
 
     // Register to send exceptions to airbrake
     public static void register(Context context, String apiKey) {
-        register(context, apiKey, DEFAULT_ENVIRONMENT_NAME, true);
+        register(context, apiKey, ENVIRONMENT_DEFAULT, true);
     }
 
     public static void register(Context context, String apiKey, String environmentName) {
