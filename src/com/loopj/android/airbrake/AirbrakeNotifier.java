@@ -55,7 +55,7 @@ public class AirbrakeNotifier {
     private static final String AIRBRAKE_API_VERSION = "2.0";
 
     private static final String NOTIFIER_NAME = "Android Airbrake Notifier";
-    private static final String NOTIFIER_VERSION = "1.0.0";
+    private static final String NOTIFIER_VERSION = "1.3.0";
     private static final String NOTIFIER_URL = "http://loopj.com";
 
     private static final String UNSENT_EXCEPTION_PATH = "/unsent_airbrake_exceptions/";
