@@ -42,20 +42,29 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Xml;
 
-
+/**
+ * Airbrake Notifier
+ *
+ * Logs exceptions to Airbrake App (http://www.airbrakeapp.com)
+ */
 public class AirbrakeNotifier {
     private static final String LOG_TAG = "AirbrakeNotifier";
 
     // Basic settings
     private static final String AIRBRAKE_ENDPOINT = "http://airbrakeapp.com/notifier_api/v2/notices";
     private static final String AIRBRAKE_API_VERSION = "2.0";
+
     private static final String NOTIFIER_NAME = "Android Airbrake Notifier";
     private static final String NOTIFIER_VERSION = "1.0.0";
     private static final String NOTIFIER_URL = "http://loopj.com";
+
     private static final String UNSENT_EXCEPTION_PATH = "/unsent_airbrake_exceptions/";
 
+    private static final String ENVIRONMENT_PRODUCTION = "production";
+    private static final String ENVIRONMENT_DEFAULT = ENVIRONMENT_PRODUCTION;
+
     // Exception meta-data
-    private static String environmentName = "production";
+    private static String environmentName = DEFAULT_ENVIRONMENT_NAME;
     private static String packageName = "unknown";
     private static String versionName = "unknown";
     private static String phoneModel = android.os.Build.MODEL;
@@ -88,7 +97,7 @@ public class AirbrakeNotifier {
 
     // Register to send exceptions to airbrake
     public static void register(Context context, String apiKey) {
-        register(context, apiKey, "production", true);
+        register(context, apiKey, DEFAULT_ENVIRONMENT_NAME, true);
     }
 
     public static void register(Context context, String apiKey, String environmentName) {
@@ -96,11 +105,11 @@ public class AirbrakeNotifier {
     }
 
     public static void register(Context context, String apiKey, String environmentName, boolean notifyOnlyProduction) {
-        // Require a airbrake api key
+        // Require an airbrake api key
         if(apiKey != null) {
             AirbrakeNotifier.apiKey = apiKey;
         } else {
-            throw new RuntimeException("AirbrakeNotifier requires a Airbrake API key.");
+            throw new RuntimeException("AirbrakeNotifier requires an Airbrake API key.");
         }
 
         // Fill in environment name if passed
@@ -113,7 +122,7 @@ public class AirbrakeNotifier {
 
         // Connect our default exception handler
         UncaughtExceptionHandler currentHandler = Thread.getDefaultUncaughtExceptionHandler();
-        if(!(currentHandler instanceof AirbrakeExceptionHandler) && (environmentName.equals("production") || !notifyOnlyProduction)) {
+        if(!(currentHandler instanceof AirbrakeExceptionHandler) && (environmentName.equals(ENVIRONMENT_PRODUCTION) || !notifyOnlyProduction)) {
             Thread.setDefaultUncaughtExceptionHandler(new AirbrakeExceptionHandler(currentHandler));
         }
 
