@@ -112,6 +112,11 @@ public class AirbrakeNotifier {
             throw new RuntimeException("AirbrakeNotifier requires an Airbrake API key.");
         }
 
+        // Checked if context is passed
+        if(context == null) {
+            throw new IllegalArgumentException("context cannot be null.");
+        }
+        
         // Fill in environment name if passed
         if(environmentName != null) {
             AirbrakeNotifier.environmentName = environmentName;
