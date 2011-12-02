@@ -239,8 +239,8 @@ public class AirbrakeNotifier {
                           s.attribute("", "method", el.getClassName() + "." + el.getMethodName());
                           s.attribute("", "file", el.getFileName() == null ? "Unknown" : el.getFileName());
                           s.attribute("", "number", String.valueOf(el.getLineNumber()));
-                        }catch(Throwable ei){
-                            ei.printStackTrace();
+                        }catch(Throwable ex){
+                            Log.v(LOG_TAG, "Exception caught:",ex);
                         }
                         s.endTag("", "line");
                     }
@@ -251,13 +251,13 @@ public class AirbrakeNotifier {
                         try{
                           s.attribute("", "file", "### CAUSED BY ###: " + currentEx.toString());
                           s.attribute("", "number", "");
-                        }catch(Throwable ei){
-                            ei.printStackTrace();
+                        }catch(Throwable ex){
+                          Log.v(LOG_TAG, "Exception caught:",ex);
                         }
                         s.endTag("", "line");
                     }
                 } catch(Throwable innerException) {
-                    innerException.printStackTrace();
+                  Log.v(LOG_TAG, "Exception caught:",e);
                   break;
                 }
             }
@@ -329,13 +329,14 @@ public class AirbrakeNotifier {
             writer.close();
 
             Log.d(LOG_TAG, "Writing new " + e.getClass().getName() + " exception to disk.");
-        } catch (Exception newException) {
-            newException.printStackTrace();
+        } catch (Exception ex) {
+            Log.v(LOG_TAG, "Exception caught:",ex);
         }
     }
 
     private static void sendExceptionData(File file) {
         try {
+            boolean sent = false;
             URL url = new URL(AIRBRAKE_ENDPOINT);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             try {
@@ -358,21 +359,32 @@ public class AirbrakeNotifier {
                 // Flush the request through
                 int response = conn.getResponseCode();
                 Log.d(LOG_TAG, "Sent exception file " + file.getName() + " to airbrake. Got response code " + String.valueOf(response));
+		
+                sent = true;
 
-                // Delete file now we've sent the exceptions
-            } catch(Throwable ei) {
-                // Ignore any file stream issues
+            } catch(IOException e) {
+
+                Log.v(LOG_TAG, "Exception caught:",e);
+
             } finally {
-                file.delete();
+
+                // delete the file only if sending was successful 
+                if ( sent ) {
+                    file.delete();
+                }
+
                 conn.disconnect();
             }
-        } catch(IOException e) {
-            // Ignore any connection failure when trying to open the connection
-            // We can try again next time
+
+        } catch(Exception e) {
+          
+          // unknown exception
+          Log.v(LOG_TAG, "Exception caught:",e);
+
         }
     }
 
-    private static void flushExceptions() {
+    private static synchronized void flushExceptions() {
         File exceptionDir = new File(filePath);
         if(exceptionDir.exists() && exceptionDir.isDirectory()) {
             File[] exceptions = exceptionDir.listFiles();
