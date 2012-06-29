@@ -23,8 +23,6 @@ creation (GitHub Issues, Pivotal Tracker, Lighthouse, Codebase, etc) and
 [Create a free Bugsnag account](https://bugsnag.com)
 
 
-&nbsp;
-
 
 Airbrake Notifier
 ----------------
