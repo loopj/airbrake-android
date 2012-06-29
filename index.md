@@ -18,6 +18,7 @@ Bugsnag is better designed for tracking exceptions on mobile applications
 and has a bunch more awesome features such as user-centric error counts,
 smart grouping, chat notification (HipChat, Campfire, etc) automatic ticket
 creation (GitHub Issues, Pivotal Tracker, Lighthouse, Codebase, etc) and
+more.
 
 
 [Create a free Bugsnag account](https://bugsnag.com)
