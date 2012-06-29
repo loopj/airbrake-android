@@ -20,12 +20,9 @@ smart grouping, chat notification (HipChat, Campfire, etc) automatic ticket
 creation (GitHub Issues, Pivotal Tracker, Lighthouse, Codebase, etc) and
 more.
 
-
 [Create a free Bugsnag account](https://bugsnag.com)
 
 
-
 Airbrake Notifier
-----------------http://loopj.com/airbrake-android/
-
+----------------
 You can still find the [deprecated airbrake notifer on github](https://github.com/loopj/airbrake-android).
