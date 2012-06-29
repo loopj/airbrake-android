@@ -14,7 +14,7 @@ I'm no longer maintaining the airbrake notifier since I've moved to using
 [Bugsnag](https://bugsnag.com). I recommend you start using Bugsnag to
 track errors in your Android apps too.
 
-Bugsnag is better designed for tracking exceptions on mobile applications
+Bugsnag is better suited to tracking exceptions on mobile applications
 and has a bunch more awesome features such as user-centric error counts,
 smart grouping, chat notification (HipChat, Campfire, etc) automatic ticket
 creation (GitHub Issues, Pivotal Tracker, Lighthouse, Codebase, etc) and
@@ -26,6 +26,6 @@ more.
 
 
 Airbrake Notifier
-----------------
+----------------http://loopj.com/airbrake-android/
 
 You can still find the [deprecated airbrake notifer on github](https://github.com/loopj/airbrake-android).
