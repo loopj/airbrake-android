@@ -1,6 +1,11 @@
 Airbrake Notifer for Android
 ===========================
 
+Deprecation Warning
+-------------------
+I am no longer maintaining this library because I am now using 
+[Bugsnag](https://bugsnag.com) to track my Android app errors.
+
 Overview
 --------
 The Airbrake notifier for Android is designed to give you instant notification
